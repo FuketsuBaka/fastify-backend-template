@@ -1,0 +1,32 @@
+{
+  "name": "template-back",
+  "version": "1.0.0",
+  "description": "Template for fastify backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto-js": "^4.0.0",
+    "fastify": "^3.12.0",
+    "fastify-cors": "^5.2.0",
+    "fastify-jwt": "^2.4.0",
+    "fastify-multipart": "^4.0.0",
+    "fastify-plugin": "^3.0.0",
+    "lodash": "^4.17.21",
+    "log-rotate": "^0.2.8",
+    "make-promises-safe": "^5.1.0",
+    "mariadb": "^2.5.3",
+    "moment": "^2.29.1",
+    "mssql": "^6.3.1",
+    "nodemon": "^2.0.7",
+    "pg": "^8.6.0",
+    "pino": "^6.11.3",
+    "pino-pretty": "^4.7.1",
+    "sequelize": "^6.6.2"
+  }
+}
