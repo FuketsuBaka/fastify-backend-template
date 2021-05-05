@@ -4,7 +4,6 @@ const pino = require('pino');
 const moment = require('moment');
 const fs = require('fs');
 const conf = require('../resources/config');
-const rotate = require('log-rotate');
 
 class LOGGER {
     constructor(default_logger_name = null) {
@@ -16,7 +15,7 @@ class LOGGER {
         logs.forEach(key => {
             if (!this.default_logger || this.default_logger === '')
                 this.default_logger = key.toLowerCase();
-            this.loggers[key.toLowerCase()] = new PINO_LOGGER(conf.APP.LOGS[key].path, conf.APP.LOGS[key].level);
+            this.loggers[key.toLowerCase()] = new PINO_LOGGER(conf.APP.LOGS[key].path, conf.APP.LOGS[key].level, conf.APP.LOGS[key].rotate);
         })
     }
     get default() {
@@ -39,9 +38,10 @@ class LOGGER {
 }
 
 class PINO_LOGGER {
-    constructor(log_path, level = 'info') {
+    constructor(log_path, level = 'info', rotate = false) {
         this.log_path = log_path;
         this.level = level;
+        this.rotate = rotate;
         this.logger = null;
         this.init_pino_logger()
     }
@@ -72,13 +72,15 @@ class PINO_LOGGER {
             this.touch(this.log_path);
             return true;
         }
+        if (!this.rotate) {
+            return true;
+        }
         const last_updated = moment(fs.statSync(this.log_path).mtime);
         if (moment().startOf('day') > last_updated) {
             // Current date
             console.log(`Rotated: ${this.log_path}
     Reason: ${moment().startOf('day')} > ${last_updated}`);
 
-            //rotate(this.log_path, {count: 30}, function (err) { console.log(err); })
             await rotate_by_date(this.log_path, last_updated)
             if (!fs.existsSync(this.log_path))
                 this.touch(this.log_path);

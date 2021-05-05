@@ -1,12 +1,14 @@
 const mssql = require('mssql');
 const { Pool } = require('pg');
 const mariadb = require('mariadb');
-
-const moment = require('moment');
-const _ = require('lodash');
 const lib = require('./db_queries');
 const utils = require('../resources/utils');
 const conf = require('../resources/config');
+const mod_cache = require('./cache');
+
+// You may need this
+const moment = require('moment');
+const _ = require('lodash');
 
 
 let ms_pool, pg_pool, mdb_pool;
@@ -26,52 +28,6 @@ async function init_pools() {
     // Postgres pool allows singlequery
     // MDB returns promises with connection-object
     utils.debug(`Init connection-pools: complete`);
-}
-
-// -------------------------------------------------------
-// CACHE
-const cached_data = {
-    dict_sample: {
-        last_updated: null,
-        interval: 3600, // seconds
-        data: null,
-    },
-}
-async function update_cache(type) {
-    if (!cached_data[type].last_updated || moment(cached_data[type].last_updated).add(cached_data[type].interval, 'seconds') < moment()) {
-        // need to init
-        init_cache(type);
-    }
-}
-function has_cache(type) {
-    // Check if has data and cache is actual
-    if (cached_data[type].data && moment(cached_data[type].last_updated).add(cached_data[type].interval, 'seconds') >= moment()) {
-        return true
-    } else {
-        return false
-    }
-}
-async function init_cache(type) {
-    if (type in cached_data) {
-        cached_data[type].data = await query_cache(type)
-        if (cached_data[type].data.ERROR_CODE === 0) {
-            utils.debug(`${type} - cache updated`)
-            cached_data[type].last_updated = moment();
-        } else {
-            // drop
-            utils.debug(`${type} - cache dropped`)
-            cached_data[type].data = null;
-        }
-    }
-}
-async function query_cache(type) {
-    if (type === 'dict_sample') {
-        const RES_filters = {
-            FINALLY: ``
-        };
-        const query_str = lib.v0.dict_sample(RES_filters);
-        return perform_query_resolve(query_str, 'mdb');
-    }
 }
 
 // -------------------------------------------------------
@@ -235,17 +191,16 @@ ${query_str}
 
 // -------------------------------------------------------
 // QUERIES
-async function query_dict_sample_v0(req) {
+let query_dict_sample_v0 = async function query_dict_sample_v0(req) {
     utils.debug(`Query Dict Sample V0`)
-
-    if (has_cache('dict_sample')) {
-        utils.debug(`Return cached data`)
-        return cached_data.dict_sample.data;
-    }
-
-    await init_cache('dict_sample')
-    return cached_data.dict_sample.data;
+    const RES_filters = {
+        FINALLY: ``
+    };
+    const query_str = lib.v0.dict_sample(RES_filters);
+    return perform_query_resolve(query_str, 'mdb');
 }
+query_dict_sample_v0 = mod_cache.cached(query_dict_sample_v0)
+
 async function query_dict_sample_recordset_v0(req) {
     utils.debug(`Query Dict Sample (Recordset) V0`)
 

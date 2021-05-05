@@ -4,6 +4,7 @@ const fp = require("fastify-plugin");
 const fs = require('fs');
 const conf = require('./resources/config');
 const utils = require('./resources/utils');
+const mod_cache = require('./modules/cache')
 require('make-promises-safe');
 const LOGGER = require('./modules/logger');
 const mod_auth = require('./modules/auth_main');
@@ -122,8 +123,8 @@ ERROR:     ${error instanceof Error ? error : JSON.stringify(error)}
     // });
 }
 function __init__() {
-    invoke_app_instance();
     init_http_options();
+    invoke_app_instance();
     setup_app_decorators();
     setup_app_hooks();
     const logs = Object.keys(conf.APP.LOGS);
@@ -140,6 +141,8 @@ function __init__() {
     utils.debug(start_up_str);
     // DB-Init
     mod_db.utils.init_pools();
+    // Cache-Init
+    mod_cache.init_cached_data();
 }
 const __main__ = async() => {
     try {
@@ -149,5 +152,6 @@ const __main__ = async() => {
         process.exit(1);
     }
 }
+
 __init__();
 __main__();

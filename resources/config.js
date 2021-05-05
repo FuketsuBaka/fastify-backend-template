@@ -11,14 +11,17 @@ const app_params = {
         MAIN: {
             path: `${ENV_IS_DEV ? './logs/main.log' : '/var/log/main.log'}`,
             level: `${ENV_IS_DEV ? 'info' : 'info'}`,
+            rotate: true,
         },
         SUB: {
             path: `${ENV_IS_DEV ? './logs/sub.log' : '/var/log/sub.log'}`,
             level: `${ENV_IS_DEV ? 'info' : 'info'}`,
+            rotate: false,
         },
         QUERIES: {
             path: `${ENV_IS_DEV ? './logs/queries.log' : '/var/log/queries.log'}`,
             level: `${ENV_IS_DEV ? 'info' : 'info'}`,
+            rotate: true,
         },
     },
 }
@@ -75,9 +78,22 @@ const error_messages = {
     },
 }
 
+const cache_settings = {
+    DATA: {
+        dict_sample: {
+            interval: 3600,
+        },
+    },
+    APPLY_MAP: {
+        // function-name : cache-name
+        'query_dict_sample_v0': 'dict_sample',
+    }
+}
+
 module.exports =  {
     ENV_IS_DEV: ENV_IS_DEV,
     APP: app_params,
     DB: db_credentials,
+    CACHE: cache_settings,
     ERRORS: error_messages,
 }
