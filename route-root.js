@@ -39,8 +39,8 @@ const opts = (app) => ({
     },
 })
 
-async function routes (app, options) {
-    app.get('/', opts(app).common.check_auth, async (req, rep) => {
+async function routes (app) {
+    app.get('/', opts(app).common.check_auth, async () => {
         return 'it works!';
     });
     // ---------------------------------------------------------------------------------------------------
@@ -48,17 +48,18 @@ async function routes (app, options) {
     app.post('/api/auth/login', async(req, rep) => {
         return await mod_auth.login(req, rep);
     });
-    app.post('/api/auth/password', opts(app).common.check_auth, async(req, rep) => {
+    app.post('/api/auth/password', opts(app).common.check_auth, async(req) => {
         return await mod_auth.change_password(req);
     });
-    app.post('/api/auth/verify', opts(app).common.check_auth, async(req, rep) => {
+    app.post('/api/auth/verify', opts(app).common.check_auth, async(req) => {
         return await mod_auth.validate(req);
     });
     // AUTH service
-    app.post('/api/auth/svc/init', opts(app).common.check_auth_root, async(req, rep) => {
+    app.post('/api/auth/svc/init', opts(app).common.check_auth_root, async(req) => {
         let force = false;
-        if (req.query !== null && req.query !== {} )
-            if (req.query.force) force = true
+        if (typeof req.query === 'object')
+            if ('force' in req.query)
+                force = true
         return await mod_auth.scripts.init(force);
     });
     app.post('/api/auth/svc/userslist', opts(app).common.check_auth_admin, async(req, rep) => {
@@ -75,10 +76,10 @@ async function routes (app, options) {
     });
     // ---------------------------------------------------------------------------------------------------
     // SAMPLE Manual DB queries
-    app.get('/api/v0/dict-sample', opts(app).common.check_auth, async(req, rep) => {
+    app.get('/api/v0/dict-sample', opts(app).common.check_auth, async(req) => {
         return await mod_db.v0.dict_sample(req);
     });
-    app.get('/api/v0/dict-sample-recordset', opts(app).common.check_auth, async(req, rep) => {
+    app.get('/api/v0/dict-sample-recordset', opts(app).common.check_auth, async(req) => {
         return await mod_db.v0.dict_sample_recordset(req);
     });
 }

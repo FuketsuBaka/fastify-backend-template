@@ -1,6 +1,7 @@
 const conf = require('../resources/config');
 const auth_utils = require('./auth_utils');
-const { Sequelize, Op, Model, DataTypes } = require('sequelize');
+const utils = require('../resources/utils');
+const { Sequelize, Model, DataTypes } = require('sequelize');
 const _ = require('lodash');
 
 const db_connection = new Sequelize(conf.DB.postgres.database,
@@ -110,17 +111,38 @@ Role.belongsToMany(User, {through: 'UserRoles' })
 
 async function sync_db(force) {
     if (force) {
-        // await User.sync({force: true});
-        // await Role.sync({force: true});
-        // UserRoles.sync({force: true});
         await db_connection.sync({force: true})
     } else {
-        // await User.sync({alter: true});
-        // await Role.sync({alter: true});
-        // UserRoles.sync({alter: true});
         await db_connection.sync({alter: true})
     }
-    return 'Sync done';
+    if (force) {
+        utils.debug(`AUTH Force init:`)
+        // init first users and groups
+        await edit_users('ADD', {
+            username: 'su',
+            password: conf.APP.ROOT_PASSWORD,
+            name: 'Root',
+            is_admin: true,
+        });
+        utils.debug(`--- User: 'su' created`)
+        await edit_users('ADD', {
+            username: 'admin',
+            password: 'admin',
+            name: 'Администратор',
+        });
+        utils.debug(`--- User: 'admin' with password 'admin' created`)
+        await edit_roles('ADD', {
+            slug: 'admins',
+            name: 'Администраторы'
+        })
+        utils.debug(`--- Group: 'admins' created`)
+        await edit_users('ASSIGN', {
+            username: 'admin',
+            roles: 'admins'
+        })
+        utils.debug(`--- User 'admin' assigned to group 'admins'`)
+    }
+    return { status: 'ok', message: 'Sync done'};
 }
 
 async function query_user_password(username, password) {
@@ -207,8 +229,8 @@ async function edit_users(method, payload) {
             password: payload.password,
             name: '',
         }
-        if(payload.is_admin)
-            vals.is_admin = true;
+        if('is_admin' in payload)
+            vals.is_admin = payload.is_admin === true;
         if(payload.name)
             vals.name = payload.name;
 
@@ -227,7 +249,7 @@ async function edit_users(method, payload) {
         const user = await User.findOne({where: search_filter})
         if (!user) throw new Error('Bad request: User by this filters not found!')
 
-        Object.keys(changes).forEach((key, index) => {
+        Object.keys(changes).forEach((key) => {
             user[key] = changes[key];
         });
         return await user.save();
@@ -331,7 +353,7 @@ async function edit_roles(method, payload) {
         const role = await Role.findOne({where: search_filter})
         if (!role) throw new Error('Bad request: Role not found!')
 
-        Object.keys(changes).forEach((key, index) => {
+        Object.keys(changes).forEach((key) => {
             role[key] = changes[key];
         });
         return await role.save();

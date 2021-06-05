@@ -17,6 +17,7 @@
     "fastify-jwt": "^2.4.0",
     "fastify-multipart": "^4.0.0",
     "fastify-plugin": "^3.0.0",
+    "http-errors": "^1.8.0",
     "lodash": "^4.17.21",
     "make-promises-safe": "^5.1.0",
     "mariadb": "^2.5.3",

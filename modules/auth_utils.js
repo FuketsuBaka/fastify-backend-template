@@ -24,7 +24,7 @@ async function jwt_destruct_token(request) {
     const auth = request.headers.authorization;
     const token = auth.split(' ')[1]
 
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         $app.jwt.verify(token, (err, decoded) => {
             if (err) {
                 utils.debug(err, err, 'error');
@@ -42,5 +42,5 @@ module.exports = {
         'decrypt': (password) => decrypt_with_AES(password),
         'construct_token': (user) => jwt_construct_token(user),
         'destruct_token': (request) => jwt_destruct_token(request),
-    }
+    },
 }

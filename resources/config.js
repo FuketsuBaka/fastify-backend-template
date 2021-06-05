@@ -1,26 +1,34 @@
 const ENV_IS_DEV = process.platform === "win32";
 
 const app_params = {
+    USE_HTTPS: ENV_IS_DEV,
+    /**
+     * USE_HTTP2: false,
+     * Keep it off, it doesn't work as intended
+     * This https://github.com/axios/axios/issues/3788 could happened. Wait for fix
+     **/
+    USE_HTTP2: false,
     SSL_KEY: ENV_IS_DEV ? './data/server.key' : '/etc/ssl/private/server.key',
     SSL_CERT: ENV_IS_DEV ? './data/server.pem' : '/etc/ssl/certs/server.pem',
     JWT_SECRET: 'THbVwadEZVhgt8tALkBeBVt6gdALxCrvCM6BTnpZry4Cat5CQY38nAyxKRwNbAyJ',
     ROOT_TOKEN: 'gsWDEmKmGXpHquQmEwwReMNUXa7gpzvTepETseb9vWtZqU2RgmCCn49UgKwUPa8V',
+    ROOT_PASSWORD: 'strong_pass',
     AES_KEY: 'aes_eS5kZmetHRTrZ94s',
     LOGS: {
         // Logger names case-insensitive
         MAIN: {
             path: `${ENV_IS_DEV ? './logs/main.log' : '/var/log/main.log'}`,
-            level: `${ENV_IS_DEV ? 'info' : 'info'}`,
+            level: `${ENV_IS_DEV ? 'debug' : 'info'}`,
             rotate: true,
         },
         SUB: {
             path: `${ENV_IS_DEV ? './logs/sub.log' : '/var/log/sub.log'}`,
-            level: `${ENV_IS_DEV ? 'info' : 'info'}`,
+            level: `${ENV_IS_DEV ? 'debug' : 'info'}`,
             rotate: false,
         },
         QUERIES: {
             path: `${ENV_IS_DEV ? './logs/queries.log' : '/var/log/queries.log'}`,
-            level: `${ENV_IS_DEV ? 'info' : 'info'}`,
+            level: `${ENV_IS_DEV ? 'debug' : 'info'}`,
             rotate: true,
         },
     },
@@ -82,12 +90,17 @@ const cache_settings = {
     DATA: {
         dict_sample: {
             interval: 3600,
+            method: 'dict_sample',
+            method_sub: 'v0',
+            module: 'db_main'
         },
     },
     APPLY_MAP: {
         // function-name : cache-name
         'query_dict_sample_v0': 'dict_sample',
-    }
+    },
+    cache_update_task: true,
+    cache_update_interval: 300 //seconds. If cache_update_task === true
 }
 
 module.exports =  {

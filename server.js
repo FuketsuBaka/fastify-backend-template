@@ -16,8 +16,8 @@ global.$LOGGER = new LOGGER('main');
 // HTTPS
 const app_options = {}
 function init_http_options() {
-    app_options.http2 = !conf.ENV_IS_DEV;
-    if (app_options.http2) {
+    app_options.http2 = conf.APP.USE_HTTP2;
+    if (conf.APP.USE_HTTPS) {
         app_options.https = {
             allowHTTP1: true,
             key: fs.readFileSync(conf.APP.SSL_KEY, 'utf8'),
@@ -123,6 +123,10 @@ ERROR:     ${error instanceof Error ? error : JSON.stringify(error)}
     // });
 }
 function __init__() {
+    utils.debug(`
+
+
+vvvvvvvv INIT APP vvvvvvvv`);
     init_http_options();
     invoke_app_instance();
     setup_app_decorators();
@@ -143,6 +147,21 @@ function __init__() {
     mod_db.utils.init_pools();
     // Cache-Init
     mod_cache.init_cached_data();
+    // SQR Models
+    /**
+     * Issue https://github.com/sequelize/sequelize/issues/12889
+     * Do not call sync with 'alter' key, it will create duplicated constraints and indexes every call.
+     */
+    //mod_auth.scripts.init(false)
+
+    // Get cache, set update job with models update
+    setTimeout(() => {
+        mod_cache.init_cache_update_task();
+        utils.debug(`^^^^^^^^ INIT APP ^^^^^^^^
+
+
+`);
+    }, 3000)
 }
 const __main__ = async() => {
     try {
